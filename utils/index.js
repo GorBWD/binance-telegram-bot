@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { ENCRYPTION_KEY, IV_KEY } = require('./config');
+const { ENCRYPTION_KEY, IV_KEY } = require('../config');
 
 exports.objToString = (obj) => {
     let csvData = [];

@@ -1,15 +1,19 @@
 # Telegram Binance Bot
 #### _this bot alerts on binance trade change_
 
+### App Requirements
+- **mongo**:`4.4.4`
+
 ### Quick Start
 1. Create Telegram Bot Application using `BotFather` bot on telegram providing name and etc...
 2. Copy HTTP API token from `BotFather` to application `BOT_TOKEN` environment variable
+
+> use `docker-compose up` for quick start of required apps initalization
 
 ```
 npm install
 npm start
 ```
-
 ### Telegram Bot 
 > Initialize Binance Api Client
 ```
@@ -18,7 +22,7 @@ npm start
 Reply message: {{token}}
 ```
 
-> Destroy Binance Api Client (`Not implemented yet`)
+> Destroy Binance Api Client
 ```
 /destroy {{token}}
 

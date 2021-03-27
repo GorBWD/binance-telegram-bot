@@ -1,8 +1,7 @@
 const request = require('got');
 const { Telegraf } = require('telegraf');
 const { BACKEND_URL, BOT_TOKEN } = require('./config');
-const BinanceApi = require('./services/BinanceApi');
-const { objToString, encrypt } = require('./utils');
+const { objToString } = require('./utils');
 
 class BinanceTelegramBot extends Telegraf {
 
@@ -32,19 +31,23 @@ class BinanceTelegramBot extends Telegraf {
         if ( !api_key || !api_secret ) {
             return ctx.reply('Please provide valid command: /init API_KEY API_SECRET');
         }
-        
-        const res = await request.get(`${BACKEND_URL}/api/init`, {
-            query: {
-                api_key,
-                api_secret
-            },
-            json: true
-        });
+        try {
 
-        const resBody = res.body;
-        const token = resBody.token;
-            
-        return ctx.reply(`Your token is: ${token}`);
+            const res = await request.get(`${BACKEND_URL}/api/init`, {
+                query: {
+                    api_key,
+                    api_secret
+                },
+                json: true
+            });
+
+            const resBody = res.body;
+            const token = resBody.token;
+                
+            return ctx.reply(`Your token is: ${token}`);
+        } catch (err) {
+            return this.onCommandError(ctx, err); 
+        }
     }
 
     async onGetAllTradingPairsCommand(ctx) {
@@ -72,7 +75,7 @@ class BinanceTelegramBot extends Telegraf {
     async onCreateAlertCommand(ctx) {
         const [ token, pair, min, max ] = ctx.message.text.split(" ").slice(1);
 
-        const res = await request.get(`${BACKEND_URL}/api/createAlert`, {
+        await request.post(`${BACKEND_URL}/api/createAlert`, {
             body: {
                 token, pair, min, max
             },
@@ -108,13 +111,33 @@ class BinanceTelegramBot extends Telegraf {
         }, 100000);
     }
 
-    onDestroyCommand(ctx) {
-
+    async onDestroyCommand(ctx) {
+        const [ token ] = ctx.message.text.split(" ").slice(1);
+            
+        await request.delete(`${BACKEND_URL}/api/destroy`, {
+            query: {
+                token
+            },
+            json: true
+        });
+        
+        ctx.reply('destroyed');
     }
 
     onCommandError(ctx, err) {
-        console.error(err);
-        ctx.reply('Something went wrong');
+        if ( err?.name == 'HTTPError' ) {
+            switch ( err.statusCode || 500 ) {
+                case 422: {
+                    return ctx.reply(err.body.message);
+                }
+    
+                default: {
+                    return ctx.reply('Something went wrong, please try again.');
+                }
+            }
+        }
+
+        ctx.reply('Something went wrong.');
     }
 }
 
